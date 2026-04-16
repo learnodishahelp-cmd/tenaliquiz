@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Wit That Won Hearts - Cyclical Quiz</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --success: #27ae60;
+            --danger: #e74c3c;
+            --light: #f4f7f6;
+        }
+        body { font-family: 'Segoe UI', sans-serif; background-color: var(--light); margin: 0; padding: 10px; display: flex; justify-content: center; }
+        .quiz-container { width: 100%; max-width: 500px; background: #fff; padding: 20px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin-top: 20px; }
+        .header { text-align: center; border-bottom: 2px solid #eee; margin-bottom: 20px; padding-bottom: 10px; }
+        .stats { display: flex; justify-content: space-between; font-weight: bold; color: var(--primary); margin-bottom: 10px; }
+        .progress-container { height: 10px; background: #eee; border-radius: 5px; margin-bottom: 20px; }
+        .progress-bar { height: 100%; background: var(--secondary); width: 0%; border-radius: 5px; transition: 0.3s; }
+        .question-text { font-size: 1.2rem; font-weight: 600; margin-bottom: 20px; color: #333; }
+        .options-grid { display: grid; gap: 10px; }
+        .option-btn { padding: 15px; border: 2px solid #ddd; border-radius: 10px; background: white; cursor: pointer; text-align: left; font-size: 1rem; transition: 0.2s; }
+        .option-btn:hover:not([disabled]) { border-color: var(--secondary); background: #f0f8ff; }
+        .correct { background: var(--success) !important; color: white; border-color: var(--success); }
+        .wrong { background: var(--danger) !important; color: white; border-color: var(--danger); }
+        #next-btn, #start-btn, #retry-btn { width: 100%; padding: 15px; border: none; border-radius: 10px; background: var(--primary); color: white; font-size: 1.1rem; cursor: pointer; margin-top: 20px; display: none; }
+        #start-btn { display: block; background: var(--secondary); }
+        .result-screen { text-align: center; display: none; }
+        .score-circle { width: 120px; height: 120px; border-radius: 50%; border: 5px solid var(--secondary); display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: bold; margin: 20px auto; color: var(--secondary); }
+    </style>
+</head>
+<body>
+
+<div class="quiz-container">
+    <div id="home-screen">
+        <div class="header">
+            <h1>The Wit That Won Hearts</h1>
+            <p>Master the Summary, Vocabulary, and Grammar</p>
+        </div>
+        <p>This quiz contains 5 sets of 25 questions each. Completing one set will lead you to the next.</p>
+        <button id="start-btn" onclick="startQuiz(0)">Start Quiz (Set 1)</button>
+    </div>
+
+    <div id="quiz-screen" style="display:none">
+        <div class="stats">
+            <span id="set-title">Set 1</span>
+            <span id="q-count">1/25</span>
+            <span id="live-score">Score: 0</span>
+        </div>
+        <div class="progress-container"><div class="progress-bar" id="progress-bar"></div></div>
+        <div class="question-text" id="question-text"></div>
+        <div class="options-grid" id="options-grid"></div>
+        <button id="next-btn" onclick="handleNext()">Next Question</button>
+    </div>
+
+    <div id="result-screen" class="result-screen">
+        <h2 id="result-header">Set Completed!</h2>
+        <div class="score-circle" id="final-score">0/25</div>
+        <p id="result-msg"></p>
+        <button id="retry-btn" onclick="loadNextSetInCycle()" style="display:block; background: var(--success);">Try Next Set (Cyclical)</button>
+    </div>
+</div>
+
+<script>
+// Data structure for 125 questions (5 sets x 25)
+const allSets = [
+// Locate this part in the Parent Code and replace it:
+  // PASTE THE NEW SET 1 HERE:
+    [
+        { q: "In the introductory story, what was the prize for the competition?", a: ["The fruit of wisdom", "A golden crown", "A new mount", "Kingdom of Kailash"], c: 0 },
+        { q: "Who were the competitors in the story of Shiva and Parvati?", a: ["Ganesh and Kartikeya", "Ram and Laxman", "Tenali and the King", "Shiva and Vishnu"], c: 0 },
+        { q: "What was Kartikeya's mount?", a: ["A mouse", "A peacock", "A lion", "An eagle"], c: 1 },
+        { q: "How did Ganesh win the competition?", a: ["He ran faster", "He used a magic carpet", "He circled his parents three times", "He hid the fruit"], c: 2 },
+        { q: "Who was the 'illustrious' monarch of the Vijayanagara Empire?", a: ["Akbar", "Vikramaditya", "Krishnadeva Raya", "Shivaji"], c: 2 },
+        { q: "The 16th century in Vijayanagara is known as the:", a: ["Silver Era", "Golden Era", "Bronze Age", "Iron Age"], c: 1 },
+        { q: "Who were the 'Ashtadiggajas'?", a: ["Eight soldiers", "Eight celebrated poets", "Eight dancers", "Eight ministers"], c: 1 },
+        { q: "Which poet was known as the 'Andhra Kavita Pitamaha'?", a: ["Tenali Rama", "Allasani Peddana", "Nandi Thimmana", "Dhurjati"], c: 1 },
+        { q: "Tenali Ramakrishna was famous for his:", a: ["Strength", "Wit and humor", "Cooking", "Archery"], c: 1 },
+        { q: "What was the Queen's name in the story?", a: ["Thirumalambal", "Jambavati", "Satyabhama", "Rukmini"], c: 0 },
+        { q: "What caused the King to become angry with the Queen?", a: ["She forgot his birthday", "She yawned while he read a poem", "She broke a vase", "She lost a war"], c: 1 },
+        { q: "How did the King react after the Queen yawned?", a: ["He laughed", "He apologized", "He stormed out of the chamber", "He went to sleep"], c: 2 },
+        { q: "The King felt the Queen's yawn was a sign of:", a: ["Tiredness", "Disrespect", "Boredom", "Illness"], c: 1 },
+        { q: "For how long did the King stop speaking to the Queen?", a: ["One day", "A few hours", "Several weeks", "A whole year"], c: 2 },
+        { q: "Who did the Queen eventually approach for help?", a: ["The Prime Minister", "The King's mother", "Tenali Rama", "The court doctor"], c: 2 },
+        { q: "What did Tenali Rama claim his 'magic' paddy seeds could do?", a: ["Grow gold", "Yield three times more than usual", "Grow without water", "Make people invisible"], c: 1 },
+        { q: "Where did Tenali say these revolutionary seeds came from?", a: ["The Moon", "A distant land", "A secret cave", "The palace garden"], c: 0 },
+        { q: "Why did the King and courtiers begin to yawn in the court?", a: ["They were sleepy", "Tenali's speech was long", "It was a natural response to seeing Tenali yawn", "The room was hot"], c: 2 },
+        { q: "What did Tenali use as an excuse for his own yawn?", a: ["He was bored", "The seeds require the sower to yawn", "He didn't sleep", "He was hungry"], c: 1 },
+        { q: "What lesson did the King realize through Tenali's trick?", a: ["Yawning is a natural reflex", "Seeds are expensive", "The Queen was right", "Tenali is a liar"], c: 0 },
+        { q: "How did the story end for the King and Queen?", a: ["They got divorced", "They continued to fight", "They reconciled and the palace was joyful", "The King left the empire"], c: 2 },
+        { q: "Tenali Rama's actions 'won' what in the end?", a: ["A bag of gold", "The King's crown", "The hearts of the people and the King", "A new house"], c: 2 },
+        { q: "What quality did Tenali Rama use to solve the crisis?", a: ["Physical strength", "Wisdom and wit", "Magic spells", "Deception"], c: 1 },
+        { q: "The story suggests that wit can help solve:", a: ["Only math problems", "Difficult social and personal conflicts", "Nothing", "Wars only"], c: 1 },
+        { q: "The 'fruit of wisdom' in the intro symbolizes:", a: ["Actual fruit", "Intelligence and devotion", "Wealth", "Power"], c: 1 }
+    ],
+// REPLACEMENT FOR SET 2: VOCABULARY & WORD MEANINGS
+[
+    { q: "What is the meaning of the word 'renowned' as used in the text?", a: ["Poorly known", "Well known", "Secretive", "Forgotten"], c: 1 },
+    { q: "Which word describes a ruler who is 'respected and famous'?", a: ["Illustrious", "Trivial", "Forlorn", "Vague"], c: 0 },
+    { q: "A 'patron' of learning is someone who:", a: ["Ignores education", "Supporter of it", "Fights against it", "Dislikes books"], c: 1 },
+    { q: "What does the word 'eminent' mean?", a: ["Ordinary", "Famous", "Quiet", "Weak"], c: 1 },
+    { q: "If a work of art is 'acclaimed', it is:", a: ["Criticized", "Hidden", "Praised", "Lost"], c: 2 },
+    { q: "The term 'insurmountable' means problems that are:", a: ["Easy to solve", "Undefeatable", "Very small", "Common"], c: 1 },
+    { q: "What is the meaning of 'trivial'?", a: ["Very important", "Unimportant", "Historical", "Beautiful"], c: 1 },
+    { q: "If a place is 'forlorn', it is:", a: ["Crowded", "Cheerful", "Lonely", "Bright"], c: 2 },
+    { q: "The King's poem was filled with 'vague' expressions. What does 'vague' mean?", a: ["Clear", "Unclear", "Colorful", "Short"], c: 1 },
+    { q: "What is a 'strategy'?", a: ["A mistake", "A plan", "A random guess", "A gift"], c: 1 },
+    { q: "When the Queen thanked Rama 'profusely', she did it:", a: ["Quietly", "In large amounts", "Rudely", "Quickly"], c: 1 },
+    { q: "A 'bustling' court is one that is:", a: ["Silent", "Busy", "Empty", "Boring"], c: 1 },
+    { q: "What does 'ornate' mean?", a: ["Plain", "Decorative", "Old", "Dirty"], c: 1 },
+    { q: "If the King's expression was 'stern', he looked:", a: ["Happy", "Very serious", "Confused", "Sleepy"], c: 1 },
+    { q: "The unresolved quarrel 'gnawed' at the King. Here, 'gnawed' means:", a: ["Chewed", "Bothered", "Healed", "Helped"], c: 1 },
+    { q: "In the context of farming, what does 'yield' refer to?", a: ["Seeds", "Harvest", "Water", "Soil"], c: 1 },
+    { q: "The courtier's 'sarcasm' refers to his:", a: ["Kindness", "Mockery", "Intelligence", "Silence"], c: 1 },
+    { q: "What are 'snickers'?", a: ["Loud screams", "Suppressed laughter", "Deep breaths", "Angry shouts"], c: 1 },
+    { q: "An 'absurd' idea is one that is:", a: ["Logical", "Illogical", "Brilliant", "Expensive"], c: 1 },
+    { q: "If Rama was 'unfazed' by the snickers, he was:", a: ["Worried", "Not worried", "Angry", "Scared"], c: 1 },
+    { q: "What does 'hush' mean?", a: ["Noise", "Silence", "A song", "A crowd"], c: 1 },
+    { q: "If someone's eyebrows are 'furrowed', they are:", a: ["Smooth", "Wrinkled", "Colored", "Missing"], c: 1 },
+    { q: "A 'sceptical' person is one who is:", a: ["Doubtful", "Trusting", "Certain", "Happy"], c: 0 },
+    { q: "To watch someone 'keenly' means to watch:", a: ["Intensely", "Briefly", "Rarely", "Blindly"], c: 0 },
+    { q: "A 'gesture' is a movement of the hand or head used to:", a: ["Exercise", "Express an idea", "Sleep", "Fight"], c: 1 }
+],
+    // REPLACEMENT FOR SET 3: GRAMMAR (COMPOUND WORDS & SOUNDS)
+[
+    { q: "Match 'Quick' with its correct partner to form a compound word:", a: ["Spoken", "Witted", "Sense", "Store"], c: 1 },
+    { q: "Match 'Soft' with its correct partner to form a compound word:", a: ["Tempered", "Blue", "Spoken", "Hall"], c: 2 },
+    { q: "Match 'Common' with its correct partner to form a compound word:", a: ["Sense", "Witted", "Store", "Hall"], c: 0 },
+    { q: "Match 'Ill' with its correct partner to form a compound word:", a: ["Spoken", "Tempered", "Sense", "Blue"], c: 1 },
+    { q: "Match 'Book' with its correct partner to form a compound word:", a: ["Hall", "Sense", "Store", "Spoken"], c: 2 },
+    { q: "Match 'Sky' with its correct partner to form a compound word:", a: ["Blue", "Tempered", "Witted", "Store"], c: 0 },
+    { q: "Match 'House' with its correct partner to form a compound word:", a: ["Spoken", "Hall", "Sense", "Witted"], c: 1 },
+    { q: "Which sound word describes the windows moving in the breeze?", a: ["Thud", "Rattle", "Snicker", "Gasp"], c: 1 },
+    { q: "Which word indicates the sound of a heavy book hitting a desk?", a: ["Murmur", "Thud", "Whisper", "Snicker"], c: 1 },
+    { q: "What sound word is used for suppressed or quiet laughter?", a: ["Roar", "Gasp", "Snicker", "Thud"], c: 2 },
+    { q: "Which word describes a low, continuous sound of voices?", a: ["Murmur", "Rattle", "Gasp", "Thud"], c: 0 },
+    { q: "What sound does someone make when they catch their breath in surprise?", a: ["Snicker", "Gasp", "Rattle", "Murmur"], c: 1 },
+    { q: "Complete: 'A small breeze made the windows ____'.", a: ["Thud", "Rattle", "Gasp", "Snicker"], c: 1 },
+    { q: "Complete: 'Sukanya tapped her book on the desk with a small ____'.", a: ["Thud", "Rattle", "Murmur", "Gasp"], c: 0 },
+    { q: "Complete: 'The students ____, their voices filled with enthusiasm'.", a: ["Rattled", "Murmured", "Thudded", "Gasped"], c: 1 },
+    { q: "Which of these is a compound word describing a person's speech?", a: ["Quick-witted", "Soft-spoken", "Ill-tempered", "Common-sense"], c: 1 },
+    { q: "Which compound word describes someone who is very clever?", a: ["Soft-spoken", "Ill-tempered", "Quick-witted", "Common-sense"], c: 2 },
+    { q: "Which sound word best fits a quiet, private conversation?", a: ["Roar", "Whisper", "Thud", "Rattle"], c: 1 },
+    { q: "Complete: 'She said stretching with a ____ as if it took great effort'.", a: ["Thud", "Gasp", "Rattle", "Snicker"], c: 1 },
+    { q: "A 'compound word' is formed by combining how many words?", a: ["Only one", "Two or more", "A prefix and suffix", "Vowels only"], c: 1 },
+    { q: "Which of these is NOT a compound word from the text?", a: ["Bookstore", "Sky-blue", "Household", "Quickly"], c: 3 },
+    { q: "The word 'Ill-tempered' describes someone who is:", a: ["Sick", "Easily angered", "Very kind", "Very smart"], c: 1 },
+    { q: "Identify the compound word: 'The children went to the ____'.", a: ["Market", "Bookstore", "School", "Park"], c: 1 },
+    { q: "Which sound represents a sudden, sharp noise?", a: ["Murmur", "Crack", "Hum", "Glow"], c: 1 },
+    { q: "What is the primary function of onomatopoeia (sound words)?", a: ["To name things", "To imitate natural sounds", "To describe colors", "To count numbers"], c: 1 }
+],
+// REPLACEMENT FOR SET 4: TEXTUAL ANALYSIS & INFERENCE
+[
+    { q: "Why did the Queen yawn during the King's poetry reading?", a: ["She was bored", "It was a natural reflex", "She was trying to annoy him", "She was sleepy"], c: 1 },
+    { q: "The King believed the yawn was a sign of 'indifference'. What does this mean?", a: ["High interest", "Lack of interest or concern", "Great anger", "Deep love"], c: 1 },
+    { q: "What does the story suggest about the King's personality early on?", a: ["He was very humble", "He was easily offended and sensitive", "He hated poetry", "He was a lazy ruler"], c: 1 },
+    { q: "What was Tenali Rama's primary goal in bringing the seeds to court?", a: ["To become a farmer", "To sell seeds for gold", "To make the King realize yawning is natural", "To feed the kingdom"], c: 2 },
+    { q: "Why did Tenali claim the seeds could only be sown by someone who hasn't yawned?", a: ["It was a magic rule", "To set a trap for the King's logic", "Because yawning kills seeds", "To prove he was a saint"], c: 1 },
+    { q: "What happened to the courtiers when they watched Tenali yawn?", a: ["They laughed at him", "They also began to yawn involuntarily", "They got angry", "They left the room"], c: 1 },
+    { q: "When the King finally yawned, what did he realize?", a: ["He was tired", "He was guilty of the same 'offence' as the Queen", "Tenali was a fraud", "The seeds were fake"], c: 1 },
+    { q: "How does the story define 'Wit'?", a: ["The ability to fight well", "The ability to use humor and intelligence to solve problems", "Being able to run fast", "Writing long books"], c: 1 },
+    { q: "The 'revolutionary' nature of the seeds was:", a: ["A scientific fact", "A clever lie used for a good cause", "A gift from Shiva", "A trade secret"], c: 1 },
+    { q: "What was the 'unresolved quarrel' compared to in the text?", a: ["A heavy cloud", "Something that gnawed at the King's peace", "A bright fire", "A silent song"], c: 1 },
+    { q: "Why didn't the Queen explain herself to the King directly?", a: ["She was too shy", "The King refused to speak to her", "She forgot what happened", "She was scared of him"], c: 1 },
+    { q: "The phrase 'stormed out' implies the King was:", a: ["Calm", "Walking slowly", "Moving in a fit of anger", "Chasing a bird"], c: 2 },
+    { q: "What was the atmosphere of the palace during the quarrel?", a: ["Lively and fun", "Brimmed with joy", "Tense and joyless", "Noisy"], c: 2 },
+    { q: "Tenali's story about the Moon seeds was meant to sound:", a: ["Ordinary", "Absurd but intriguing", "Boring", "Terrifying"], c: 1 },
+    { q: "Why did Tenali Rama yawn intentionally in front of the King?", a: ["He was tired of talking", "To trigger a natural reaction in the King", "He had a cold", "To show disrespect"], c: 1 },
+    { q: "The King’s reaction to his own yawn was:", a: ["Anger at Tenali", "Self-realization and a sheepish smile", "Confusion", "He ignored it"], c: 1 },
+    { q: "What does the 'Golden Era' imply about the empire's culture?", a: ["They only cared about gold", "Art and wisdom were highly valued", "There were no laws", "Everyone was a poet"], c: 1 },
+    { q: "Which character acts as the 'bridge' in the story?", a: ["The King", "The Queen", "Tenali Rama", "Allasani Peddana"], c: 2 },
+    { q: "The theme of the Ganesh story at the start is most similar to:", a: ["Physical strength wins", "Wisdom and devotion are superior", "Speed is everything", "Parents are strict"], c: 1 },
+    { q: "The seeds from the moon represent:", a: ["Actual space travel", "A creative 'white lie'", "The King's wealth", "A failed experiment"], c: 1 },
+    { q: "How did the King's 'stern' expression change at the end?", a: ["It became angrier", "It vanished into a smile", "It stayed the same", "He started crying"], c: 1 },
+    { q: "The phrase 'win hearts' means:", a: ["To perform surgery", "To gain love and admiration", "To buy people's loyalty", "To win a race"], c: 1 },
+    { q: "What was the 'divine fruit' a reward for?", a: ["Running fast", "Wisdom and devotion", "Climbing a mountain", "Eating the most"], c: 1 },
+    { q: "Why is the 16th century called 'Golden' in the text?", a: ["Because of the King's jewelry", "Because of the flourishment of art and literature", "Because the sun shone more", "Because of gold mines"], c: 1 },
+    { q: "What does the story teach about human nature?", a: ["People never change", "Reflexes like yawning are uncontrollable", "Kings are always right", "Poetry is dangerous"], c: 1 }
+],
+// REPLACEMENT FOR SET 5: MIXED COMPREHENSIVE REVIEW
+[
+    { q: "Who was the 'Andhra Kavita Pitamaha' mentioned in the text?", a: ["Tenali Rama", "Allasani Peddana", "Krishnadeva Raya", "Nandi Thimmana"], c: 1 },
+    { q: "What does the word 'profusely' mean in the sentence 'the Queen thanked him profusely'?", a: ["Barely", "In great amount", "Angrily", "Secretly"], c: 1 },
+    { q: "Which sound word describes the voices of students filled with enthusiasm?", a: ["Thud", "Rattle", "Murmur", "Gasp"], c: 2 },
+    { q: "Why did Ganesh circle his parents instead of the world?", a: ["He was lazy", "He saw them as his entire world", "His mouse was broken", "He forgot the rules"], c: 1 },
+    { q: "What is the compound word for 'a place where books are sold'?", a: ["Book-hall", "Bookstore", "Book-sense", "Book-blue"], c: 1 },
+    { q: "The King's 'stern' expression vanished into a...", a: ["Frown", "Sheepish smile", "Roar of anger", "Cry"], c: 1 },
+    { q: "What does 'unfazed' mean?", a: ["Scared", "Not bothered or worried", "Very excited", "Confused"], c: 1 },
+    { q: "How many poets were in the 'Ashtadiggajas'?", a: ["Five", "Ten", "Eight", "Twelve"], c: 2 },
+    { q: "Complete the compound word: 'Sky-____'.", a: ["Store", "Blue", "Witted", "Spoken"], c: 1 },
+    { q: "What was the main conflict of the story?", a: ["A war with a neighbor", "A royal quarrel over a yawn", "A stolen fruit", "A drought"], c: 1 },
+    { q: "Which word is a synonym for 'renowned'?", a: ["Unknown", "Famous", "Small", "Ancient"], c: 1 },
+    { q: "Which sound word fits: 'The students ___ in surprise'?", a: ["Gasped", "Thudded", "Rattled", "Murmured"], c: 0 },
+    { q: "Tenali's seeds were supposedly from which celestial body?", a: ["The Sun", "Mars", "The Moon", "Venus"], c: 2 },
+    { q: "What does 'trivial' mean?", a: ["Massive", "Unimportant", "Historical", "Vague"], c: 1 },
+    { q: "If someone is 'soft-spoken', they speak...", a: ["Loudly", "Gently/Quietly", "Rudely", "Fast"], c: 1 },
+    { q: "What was the result of Tenali's wit?", a: ["He was executed", "The King and Queen reconciled", "He became King", "The seeds grew gold"], c: 1 },
+    { q: "Which word means 'mockery' or 'sneering remarks'?", a: ["Sarcasm", "Wisdom", "Devotion", "Strategy"], c: 0 },
+    { q: "Who was Kartikeya's mount?", a: ["A Mouse", "A Peacock", "A Lion", "A Bull"], c: 1 },
+    { q: "What does 'ill-tempered' mean?", a: ["Feeling sick", "Easily made angry", "Very smart", "Very calm"], c: 1 },
+    { q: "The story is set in which century?", a: ["14th", "16th", "12th", "18th"], c: 1 },
+    { q: "What is the meaning of 'forlorn'?", a: ["Happy", "Lonely and sad", "Busy", "Expensive"], c: 1 },
+    { q: "Complete the compound word: 'Common-____'.", a: ["Sense", "Spoken", "Tempered", "Store"], c: 0 },
+    { q: "Which sound word describes the sound of a heavy object falling?", a: ["Murmur", "Thud", "Snicker", "Rattle"], c: 1 },
+    { q: "Why is Tenali Rama remembered today?", a: ["For his wealth", "For his wit and wisdom", "For his military power", "For his cooking"], c: 1 },
+    { q: "What was the 'fruit of wisdom' a symbol for in the intro?", a: ["Physical strength", "Spiritual and intellectual growth", "A tasty snack", "Political power"], c: 1 }
+],
+
+];
+
+let currentSetIdx = 0;
+let currentQIdx = 0;
+let currentScore = 0;
+
+function startQuiz(setIndex) {
+    currentSetIdx = setIndex;
+    currentQIdx = 0;
+    currentScore = 0;
+    document.getElementById('home-screen').style.display = 'none';
+    document.getElementById('result-screen').style.display = 'none';
+    document.getElementById('quiz-screen').style.display = 'block';
+    renderQuestion();
+}
+
+function renderQuestion() {
+    const question = allSets[currentSetIdx][currentQIdx];
+    document.getElementById('set-title').innerText = `Set ${currentSetIdx + 1}`;
+    document.getElementById('q-count').innerText = `${currentQIdx + 1}/25`;
+    document.getElementById('live-score').innerText = `Score: ${currentScore}`;
+    document.getElementById('question-text').innerText = question.q;
+    document.getElementById('next-btn').style.display = 'none';
+    
+    const grid = document.getElementById('options-grid');
+    grid.innerHTML = '';
+    
+    question.a.forEach((opt, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.innerText = opt;
+        btn.onclick = () => selectOption(i, btn);
+        grid.appendChild(btn);
+    });
+
+    const progress = ((currentQIdx) / 25) * 100;
+    document.getElementById('progress-bar').style.width = progress + '%';
+}
+
+function selectOption(idx, btn) {
+    const correct = allSets[currentSetIdx][currentQIdx].c;
+    const allBtns = document.querySelectorAll('.option-btn');
+    
+    allBtns.forEach(b => b.disabled = true);
+    
+    if(idx === correct) {
+        btn.classList.add('correct');
+        currentScore++;
+    } else {
+        btn.classList.add('wrong');
+        allBtns[correct].classList.add('correct');
+    }
+    document.getElementById('next-btn').style.display = 'block';
+}
+
+function handleNext() {
+    currentQIdx++;
+    if(currentQIdx < 25) {
+        renderQuestion();
+    } else {
+        showResults();
+    }
+}
+
+function showResults() {
+    document.getElementById('quiz-screen').style.display = 'none';
+    document.getElementById('result-screen').style.display = 'block';
+    document.getElementById('final-score').innerText = `${currentScore}/25`;
+    
+    // Logic to show which set is next in the button text
+    const nextSetNumber = ((currentSetIdx + 1) % 5) + 1;
+    document.getElementById('retry-btn').innerText = `Try Set ${nextSetNumber} (Cyclical)`;
+}
+
+function loadNextSetInCycle() {
+    // Cyclical logic: increment and wrap around using modulo 5
+    currentSetIdx = (currentSetIdx + 1) % 5;
+    startQuiz(currentSetIdx);
+}
+</script>
+
+</body>
+</html>
